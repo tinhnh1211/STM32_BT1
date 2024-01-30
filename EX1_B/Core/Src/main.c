@@ -18,6 +18,22 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "stm32f103x6.h"
+
+void delay_ms(uint64_t ms) {
+    // Configure the System Tick timer to generate an interrupt every 1 ms
+    SysTick->LOAD = 72000 - 1; // 1 ms delay at 72 MHz
+    SysTick->VAL = 0;
+    SysTick->CTRL = SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_ENABLE_Msk;
+
+    // Wait for the specified number of milliseconds
+    for (uint32_t i = 0; i < ms; i++) {
+        while ((SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk) == 0);
+    }
+
+    // Disable the System Tick timer
+    SysTick->CTRL &= ~SysTick_CTRL_ENABLE_Msk;
+}
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -80,6 +96,8 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
+  	  RCC->AHBENR	|= 0xFC;//Enable the clocks for GPIO ports
+  	  GPIOA->CRL = 0X44344444;//PA5 as output
 
   /* USER CODE END SysInit */
 
@@ -94,10 +112,9 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-	  HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, SET);
-	  HAL_Delay(1000);
-	  HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, RESET);
-	  HAL_Delay(1000);
+	  GPIOA->ODR ^= (1<<5); // Pa5 on
+	    delay_ms(1000);
+
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
